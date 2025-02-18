@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { SmilePlus, Meh, Frown, RotateCcw, Download, SmileBeam } from 'lucide-react';
+import { SmilePlus, Meh, Frown, RotateCcw, Download } from 'lucide-react';
 
 interface VoteCount {
   excellent: number;
@@ -63,7 +63,7 @@ const SatisfactionApp: React.FC = () => {
                 onClick={() => handleVote('excellent')} 
                 className="flex flex-col items-center p-6 bg-green-500 hover:bg-green-600"
               >
-                <SmileBeam className="h-12 w-12" />
+                <SmilePlus className="h-12 w-12" />
                 {/* Suppression de l'affichage du nombre de votes */}
               </Button>
               
