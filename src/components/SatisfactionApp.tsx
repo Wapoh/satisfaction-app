@@ -4,19 +4,21 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { SmilePlus, Meh, Frown, RotateCcw, Download } from 'lucide-react';
+import { SmilePlus, Meh, Frown, RotateCcw, Download, SmileBeam } from 'lucide-react';
 
 interface VoteCount {
-  happy: number;
-  neutral: number;
-  sad: number;
+  excellent: number;
+  bien: number;
+  moyen: number;
+  insuffisant: number;
 }
 
 const SatisfactionApp: React.FC = () => {
   const [votes, setVotes] = useState<VoteCount>({
-    happy: 0,
-    neutral: 0,
-    sad: 0
+    excellent: 0,
+    bien: 0,
+    moyen: 0,
+    insuffisant: 0
   });
 
   const handleVote = (type: keyof VoteCount) => {
@@ -28,14 +30,15 @@ const SatisfactionApp: React.FC = () => {
 
   const resetVotes = () => {
     setVotes({
-      happy: 0,
-      neutral: 0,
-      sad: 0
+      excellent: 0,
+      bien: 0,
+      moyen: 0,
+      insuffisant: 0
     });
   };
 
   const exportResults = () => {
-    const data = `Résultats:\nSatisfait: ${votes.happy}\nNeutre: ${votes.neutral}\nInsatisfait: ${votes.sad}`;
+    const data = `Résultats:\nExcellent: ${votes.excellent}\nBien: ${votes.bien}\nMoyen: ${votes.moyen}\nInsuffisant: ${votes.insuffisant}`;
     const blob = new Blob([data], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -48,36 +51,44 @@ const SatisfactionApp: React.FC = () => {
   return (
     <div className="p-4 max-w-md mx-auto">
       <Tabs defaultValue="vote" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="vote">Voter</TabsTrigger>
-          <TabsTrigger value="admin">Administration</TabsTrigger>
+          {/* L'onglet Administration a été supprimé */}
         </TabsList>
 
         <TabsContent value="vote" className="mt-4">
           <Card className="p-6">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <Button 
-                onClick={() => handleVote('happy')} 
+                onClick={() => handleVote('excellent')} 
                 className="flex flex-col items-center p-6 bg-green-500 hover:bg-green-600"
               >
+                <SmileBeam className="h-12 w-12" />
+                {/* Suppression de l'affichage du nombre de votes */}
+              </Button>
+              
+              <Button 
+                onClick={() => handleVote('bien')} 
+                className="flex flex-col items-center p-6 bg-yellow-400 hover:bg-yellow-500"
+              >
                 <SmilePlus className="h-12 w-12" />
-                <span className="mt-2">{votes.happy}</span>
+                {/* Suppression de l'affichage du nombre de votes */}
               </Button>
 
               <Button 
-                onClick={() => handleVote('neutral')} 
+                onClick={() => handleVote('moyen')} 
                 className="flex flex-col items-center p-6 bg-orange-500 hover:bg-orange-600"
               >
                 <Meh className="h-12 w-12" />
-                <span className="mt-2">{votes.neutral}</span>
+                {/* Suppression de l'affichage du nombre de votes */}
               </Button>
 
               <Button 
-                onClick={() => handleVote('sad')} 
+                onClick={() => handleVote('insuffisant')} 
                 className="flex flex-col items-center p-6 bg-red-500 hover:bg-red-600"
               >
                 <Frown className="h-12 w-12" />
-                <span className="mt-2">{votes.sad}</span>
+                {/* Suppression de l'affichage du nombre de votes */}
               </Button>
             </div>
           </Card>
