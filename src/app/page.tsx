@@ -9,8 +9,8 @@ export default function Home() {
           <Image 
             src="/640px-TernoisCom_logo_2017.png" 
             alt="Logo de la Communauté de Communes du Ternois" 
-            width={250} 
-            height={100} 
+            width={500} 
+            height={200} 
           />
         </div>
         <SatisfactionApp />
