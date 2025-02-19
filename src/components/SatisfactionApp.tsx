@@ -71,25 +71,47 @@ const SatisfactionApp: React.FC = () => {
   // Custom SVG Smileys
   const SmileySVG = ({ type }: { type: 'excellent' | 'bien' | 'moyen' | 'insuffisant' }) => {
     const colors = {
-      excellent: '#90EE90', // Light green
-      bien: '#FFD700',      // Yellow
-      moyen: '#FFA500',     // Orange
-      insuffisant: '#DC143C' // Red
+      excellent: '#8CC84B', // Vert vif
+      bien: '#FFD700',      // Jaune
+      moyen: '#FF8C00',     // Orange
+      insuffisant: '#FF4136' // Rouge
     };
 
-    const paths = {
-      excellent: "M50 90 C 40 90, 30 70, 50 60 C 70 70, 60 90, 50 90", // Big smile
-      bien: "M30 70 C 40 75, 60 75, 70 70",                            // Smile
-      moyen: "M30 70 L 70 70",                                         // Straight line
-      insuffisant: "M30 80 C 40 70, 60 70, 70 80"                      // Frown
+    const faces = {
+      excellent: (
+        <>
+          <circle cx="35" cy="40" r="5" fill="#000" />
+          <circle cx="65" cy="40" r="5" fill="#000" />
+          <path d="M30 55 C 40 65, 60 65, 70 55" stroke="#000" strokeWidth="5" fill="none" />
+        </>
+      ),
+      bien: (
+        <>
+          <circle cx="35" cy="40" r="5" fill="#000" />
+          <circle cx="65" cy="40" r="5" fill="#000" />
+          <path d="M30 60 L 70 60" stroke="#000" strokeWidth="5" fill="none" />
+        </>
+      ),
+      moyen: (
+        <>
+          <circle cx="35" cy="40" r="5" fill="#000" />
+          <circle cx="65" cy="40" r="5" fill="#000" />
+          <path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" />
+        </>
+      ),
+      insuffisant: (
+        <>
+          <path d="M25 35 C 30 30, 35 30, 40 35" stroke="#000" strokeWidth="5" fill="none" />
+          <path d="M60 35 C 65 30, 70 30, 75 35" stroke="#000" strokeWidth="5" fill="none" />
+          <path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" />
+        </>
+      )
     };
 
     return (
       <svg viewBox="0 0 100 100" className="w-64 h-64 cursor-pointer">
         <circle cx="50" cy="50" r="45" fill={colors[type]} />
-        <circle cx="35" cy="40" r="5" fill="#333" /> {/* Left eye */}
-        <circle cx="65" cy="40" r="5" fill="#333" /> {/* Right eye */}
-        <path d={paths[type]} stroke="#333" strokeWidth="3" fill="none" /> {/* Mouth */}
+        {faces[type]}
       </svg>
     );
   };
@@ -105,6 +127,7 @@ const SatisfactionApp: React.FC = () => {
 
         <TabsContent value="vote" className="mt-4">
           <Card className="p-6">
+            <h2 className="text-2xl font-medium text-center mb-8">Merci de donner votre avis</h2>
             <div className="grid grid-cols-4 gap-8">
               <div onClick={() => handleVote('excellent')} className="cursor-pointer hover:scale-105 transition-transform">
                 <SmileySVG type="excellent" />
