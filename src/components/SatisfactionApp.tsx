@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { RotateCcw, Download } from 'lucide-react';
+import Toast from '@/components/Toast';
 
 interface VoteCount {
   excellent: number;
@@ -13,7 +14,13 @@ interface VoteCount {
   insuffisant: number;
 }
 
-const SatisfactionApp: React.FC = () => {
+type VoteType = keyof VoteCount;
+
+export default function SatisfactionApp({
+  onVote,
+}: {
+  onVote?: (type: VoteType) => void; // 👈 callback optionnel
+}) {
   const [votes, setVotes] = useState<VoteCount>({
     excellent: 0,
     bien: 0,
@@ -23,12 +30,18 @@ const SatisfactionApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('vote');
   const [adminClicks, setAdminClicks] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
+  const [showToast, setShowToast] = useState(false);
 
-  const handleVote = (type: keyof VoteCount) => {
+  const handleVote = (type: VoteType) => {
+    // callback vers la page (pour sauver age + createdAt)
+    onVote?.(type);
+
+    // comptage local existant
     setVotes(prev => ({
       ...prev,
       [type]: prev[type] + 1
     }));
+    setShowToast(true);
   };
 
   const resetVotes = () => {
@@ -68,46 +81,20 @@ const SatisfactionApp: React.FC = () => {
     }
   }, [adminClicks]);
 
-  // Custom SVG Smileys
+  // Custom SVG Smileys (inchangé)
   const SmileySVG = ({ type }: { type: 'excellent' | 'bien' | 'moyen' | 'insuffisant' }) => {
     const colors = {
-      excellent: '#8CC84B', // Vert vif
-      bien: '#FFD700',      // Jaune
-      moyen: '#FF8C00',     // Orange
-      insuffisant: '#FF4136' // Rouge
+      excellent: '#8CC84B',
+      bien: '#FFD700',
+      moyen: '#FF8C00',
+      insuffisant: '#FF4136'
     };
-
     const faces = {
-      excellent: (
-        <>
-          <circle cx="35" cy="40" r="5" fill="#000" />
-          <circle cx="65" cy="40" r="5" fill="#000" />
-          <path d="M30 55 C 40 65, 60 65, 70 55" stroke="#000" strokeWidth="5" fill="none" />
-        </>
-      ),
-      bien: (
-        <>
-          <circle cx="35" cy="40" r="5" fill="#000" />
-          <circle cx="65" cy="40" r="5" fill="#000" />
-          <path d="M30 60 L 70 60" stroke="#000" strokeWidth="5" fill="none" />
-        </>
-      ),
-      moyen: (
-        <>
-          <circle cx="35" cy="40" r="5" fill="#000" />
-          <circle cx="65" cy="40" r="5" fill="#000" />
-          <path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" />
-        </>
-      ),
-      insuffisant: (
-        <>
-          <path d="M25 35 C 30 30, 35 30, 40 35" stroke="#000" strokeWidth="5" fill="none" />
-          <path d="M60 35 C 65 30, 70 30, 75 35" stroke="#000" strokeWidth="5" fill="none" />
-          <path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" />
-        </>
-      )
+      excellent: (<><circle cx="35" cy="40" r="5" fill="#000" /><circle cx="65" cy="40" r="5" fill="#000" /><path d="M30 55 C 40 65, 60 65, 70 55" stroke="#000" strokeWidth="5" fill="none" /></>),
+      bien: (<><circle cx="35" cy="40" r="5" fill="#000" /><circle cx="65" cy="40" r="5" fill="#000" /><path d="M30 60 L 70 60" stroke="#000" strokeWidth="5" fill="none" /></>),
+      moyen: (<><circle cx="35" cy="40" r="5" fill="#000" /><circle cx="65" cy="40" r="5" fill="#000" /><path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" /></>),
+      insuffisant: (<><path d="M25 35 C 30 30, 35 30, 40 35" stroke="#000" strokeWidth="5" fill="none" /><path d="M60 35 C 65 30, 70 30, 75 35" stroke="#000" strokeWidth="5" fill="none" /><path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" /></>)
     };
-
     return (
       <svg viewBox="0 0 100 100" className="w-64 h-64 cursor-pointer">
         <circle cx="50" cy="50" r="45" fill={colors[type]} />
@@ -119,7 +106,7 @@ const SatisfactionApp: React.FC = () => {
   return (
     <div className="p-4 max-w-6xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div 
+        <div
           className="w-6 h-6 absolute top-2 right-2 cursor-default"
           onClick={handleLogoClick}
           title="Zone d'accès administrateur"
@@ -127,7 +114,6 @@ const SatisfactionApp: React.FC = () => {
 
         <TabsContent value="vote" className="mt-4">
           <Card className="p-6">
-            <h2 className="text-2xl font-medium text-center mb-8">Merci de donner votre avis</h2>
             <div className="grid grid-cols-4 gap-8">
               <div onClick={() => handleVote('excellent')} className="cursor-pointer hover:scale-105 transition-transform">
                 <SmileySVG type="excellent" />
@@ -157,38 +143,30 @@ const SatisfactionApp: React.FC = () => {
                   <li>Insuffisant: {votes.insuffisant}</li>
                 </ul>
               </div>
-              
-              <Button 
-                onClick={resetVotes}
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
+
+              <Button onClick={resetVotes} variant="outline" className="flex items-center gap-2">
                 <RotateCcw className="w-4 h-4" />
                 Réinitialiser
               </Button>
-              
-              <Button 
-                onClick={exportResults}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
+
+              <Button onClick={exportResults} variant="outline" className="flex items-center gap-2">
                 <Download className="w-4 h-4" />
                 Exporter les résultats
               </Button>
-              
-              <Button 
-                onClick={() => setActiveTab('vote')}
-                variant="default" 
-                className="mt-4"
-              >
+
+              <Button onClick={() => setActiveTab('vote')} variant="default" className="mt-4">
                 Retour au vote
               </Button>
             </div>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Toast
+        message="Merci de votre réponse"
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
-};
-
-export default SatisfactionApp;
+}
