@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import AgeSelect, { AgeGroup } from "@/components/AgeSelect";
+import { AgeGroup } from "@/components/AgeSelect";
+import AgeTiles from "@/components/AgeTiles";
 import SatisfactionApp from "@/components/SatisfactionApp";
 
 type Feedback = {
@@ -17,14 +18,20 @@ export default function Home() {
   const [err, setErr] = useState<string | null>(null);
   const [data, setData] = useState<Feedback[]>([]);
 
-  // charge les anciens retours (si besoin)
+  // Charge les anciens retours (si besoin)
   useEffect(() => {
-    const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+    const raw =
+      typeof window !== "undefined"
+        ? localStorage.getItem(STORAGE_KEY)
+        : null;
     setData(raw ? (JSON.parse(raw) as Feedback[]) : []);
   }, []);
 
-  // mapping 4 smileys -> note 1..5 (à adapter si tu veux)
-  const mapVoteToRating: Record<"excellent" | "bien" | "moyen" | "insuffisant", number> = {
+  // Mapping 4 smileys -> note 1..5
+  const mapVoteToRating: Record<
+    "excellent" | "bien" | "moyen" | "insuffisant",
+    number
+  > = {
     excellent: 5,
     bien: 4,
     moyen: 3,
@@ -37,7 +44,7 @@ export default function Home() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }
 
-  // appelé par SatisfactionApp à chaque clic sur un smiley
+  // Appelé par SatisfactionApp à chaque clic sur un smiley
   function handleVote(type: "excellent" | "bien" | "moyen" | "insuffisant") {
     if (!age) {
       setErr("Choisis une tranche d’âge avant de voter.");
@@ -65,13 +72,13 @@ export default function Home() {
           />
         </div>
 
-        {/* 🔹 Menu tranche d’âge AU-DESSUS des smileys */}
+        {/* 🔹 Choix de la tranche d’âge sous forme de vignettes */}
         <section className="mx-auto max-w-2xl rounded-2xl border bg-white p-6 shadow-sm">
-          <AgeSelect value={age as AgeGroup} onChange={setAge} required />
-          {err && <p className="mt-2 text-red-600">{err}</p>}
+          <AgeTiles value={age as AgeGroup} onChange={setAge} required />
+          {err && <p className="mt-3 text-red-600 text-center">{err}</p>}
         </section>
 
-        {/* 🔹 Smileys (SatisfactionApp) */}
+        {/* 🔹 Smileys de satisfaction */}
         <SatisfactionApp onVote={handleVote} />
       </div>
     </main>
