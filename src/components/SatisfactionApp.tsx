@@ -15,11 +15,9 @@ interface VoteCount {
 }
 type VoteType = keyof VoteCount;
 
-// --- Nouveaux types / helpers pour l'onglet admin ---
+// ---- Données admin (lecture localStorage)
 type AgeGroup = "-15" | "15-19" | "20-24" | "25-39" | "40-59" | "60+";
 const AGE_GROUPS: AgeGroup[] = ["-15", "15-19", "20-24", "25-39", "40-59", "60+"];
-
-// Le localStorage de la page enregistre: { rating:number (1..5), age:AgeGroup, createdAt:string }
 type StoredFeedback = { rating: number; age: AgeGroup; createdAt: string };
 const STORAGE_KEY = "satisfaction-feedbacks";
 
@@ -33,7 +31,7 @@ function mapRatingToVoteType(r: number): VoteType {
 export default function SatisfactionApp({
   onVote,
 }: {
-  onVote?: (type: VoteType) => void; // callback optionnel vers la page
+  onVote?: (type: VoteType) => void;
 }) {
   const [votes, setVotes] = useState<VoteCount>({
     excellent: 0,
@@ -46,37 +44,30 @@ export default function SatisfactionApp({
   const [lastClickTime, setLastClickTime] = useState(0);
   const [showToast, setShowToast] = useState(false);
 
-  // --- Nouveaux états admin ---
+  // Admin data
   const [stored, setStored] = useState<StoredFeedback[]>([]);
   const [matrix, setMatrix] = useState<Record<VoteType, Record<AgeGroup, number>> | null>(null);
 
   const handleVote = (type: VoteType) => {
-    // callback vers la page (elle sauvegarde age+createdAt+rating)
+    // callback vers la page (sauvegarde age + createdAt + rating)
     onVote?.(type);
 
-    // compteur local des smileys
-    setVotes(prev => ({
-      ...prev,
-      [type]: prev[type] + 1
-    }));
+    // compteur local
+    setVotes(prev => ({ ...prev, [type]: prev[type] + 1 }));
     setShowToast(true);
 
-    // recharger les données stockées pour que l'admin se mette à jour en direct
+    // petite vibration (si supportée) pour retour haptique
+    try { (navigator as any)?.vibrate?.(10); } catch {}
+
+    // recharge les données stockées (pour admin en direct)
     try {
       const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
       setStored(raw ? (JSON.parse(raw) as StoredFeedback[]) : []);
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   const resetVotes = () => {
-    setVotes({
-      excellent: 0,
-      bien: 0,
-      moyen: 0,
-      insuffisant: 0
-    });
+    setVotes({ excellent: 0, bien: 0, moyen: 0, insuffisant: 0 });
   };
 
   const exportResults = () => {
@@ -104,6 +95,7 @@ Insuffisant: ${votes.insuffisant}`;
     setLastClickTime(currentTime);
   };
 
+  // triple clic → onglet admin
   useEffect(() => {
     if (adminClicks >= 3) {
       setActiveTab('admin');
@@ -111,7 +103,7 @@ Insuffisant: ${votes.insuffisant}`;
     }
   }, [adminClicks]);
 
-  // Charge les votes stockés par la page au montage
+  // charge votes stockés
   useEffect(() => {
     try {
       const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -121,7 +113,7 @@ Insuffisant: ${votes.insuffisant}`;
     }
   }, []);
 
-  // À l'ouverture de l'onglet admin (ou quand 'stored' change), recalculer la matrice âge × appréciation
+  // calcule matrice âge × appréciation à l’ouverture de l’admin
   useEffect(() => {
     if (activeTab !== "admin") return;
 
@@ -140,7 +132,7 @@ Insuffisant: ${votes.insuffisant}`;
     setMatrix(base);
   }, [activeTab, stored]);
 
-  // Custom SVG Smileys (inchangé)
+  // ---- Smileys iPad-friendly
   const SmileySVG = ({ type }: { type: 'excellent' | 'bien' | 'moyen' | 'insuffisant' }) => {
     const colors = {
       excellent: '#8CC84B',
@@ -150,49 +142,62 @@ Insuffisant: ${votes.insuffisant}`;
     };
     const faces = {
       excellent: (<><circle cx="35" cy="40" r="5" fill="#000" /><circle cx="65" cy="40" r="5" fill="#000" /><path d="M30 55 C 40 65, 60 65, 70 55" stroke="#000" strokeWidth="5" fill="none" /></>),
-      bien: (<><circle cx="35" cy="40" r="5" fill="#000" /><circle cx="65" cy="40" r="5" fill="#000" /><path d="M30 60 L 70 60" stroke="#000" strokeWidth="5" fill="none" /></>),
-      moyen: (<><circle cx="35" cy="40" r="5" fill="#000" /><circle cx="65" cy="40" r="5" fill="#000" /><path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" /></>),
-      insuffisant: (<><path d="M25 35 C 30 30, 35 30, 40 35" stroke="#000" strokeWidth="5" fill="none" /><path d="M60 35 C 65 30, 70 30, 75 35" stroke="#000" strokeWidth="5" fill="none" /><path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" /></>)
+      bien:      (<><circle cx="35" cy="40" r="5" fill="#000" /><circle cx="65" cy="40" r="5" fill="#000" /><path d="M30 60 L 70 60" stroke="#000" strokeWidth="5" fill="none" /></>),
+      moyen:     (<><circle cx="35" cy="40" r="5" fill="#000" /><circle cx="65" cy="40" r="5" fill="#000" /><path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" /></>),
+      insuffisant:(<><path d="M25 35 C 30 30, 35 30, 40 35" stroke="#000" strokeWidth="5" fill="none" /><path d="M60 35 C 65 30, 70 30, 75 35" stroke="#000" strokeWidth="5" fill="none" /><path d="M30 65 C 40 55, 60 55, 70 65" stroke="#000" strokeWidth="5" fill="none" /></>)
     };
     return (
-      <svg viewBox="0 0 100 100" className="w-64 h-64 cursor-pointer">
+      <svg
+        viewBox="0 0 100 100"
+        className="select-none touch-none w-36 h-36 md:w-56 md:h-56 lg:w-64 lg:h-64"
+        aria-hidden="true"
+        focusable="false"
+      >
         <circle cx="50" cy="50" r="45" fill={colors[type]} />
         {faces[type]}
       </svg>
     );
   };
 
+  // Bouton “smiley” accessible et large zone de clic
+  const SmileyButton = ({
+    type, label, onClick,
+  }: { type: 'excellent'|'bien'|'moyen'|'insuffisant'; label: string; onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      className="group w-full flex items-center justify-center rounded-2xl p-2 md:p-3 hover:scale-[1.03] active:scale-[0.98] transition-transform outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      aria-label={label}
+    >
+      <SmileySVG type={type} />
+    </button>
+  );
+
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative">
+        {/* Zone d’accès admin (triple clic) */}
         <div
           className="w-6 h-6 absolute top-2 right-2 cursor-default"
           onClick={handleLogoClick}
           title="Zone d'accès administrateur"
         />
 
+        {/* VOTE */}
         <TabsContent value="vote" className="mt-4">
-          <Card className="p-6">
-            <div className="grid grid-cols-4 gap-8">
-              <div onClick={() => handleVote('excellent')} className="cursor-pointer hover:scale-105 transition-transform">
-                <SmileySVG type="excellent" />
-              </div>
-              <div onClick={() => handleVote('bien')} className="cursor-pointer hover:scale-105 transition-transform">
-                <SmileySVG type="bien" />
-              </div>
-              <div onClick={() => handleVote('moyen')} className="cursor-pointer hover:scale-105 transition-transform">
-                <SmileySVG type="moyen" />
-              </div>
-              <div onClick={() => handleVote('insuffisant')} className="cursor-pointer hover:scale-105 transition-transform">
-                <SmileySVG type="insuffisant" />
-              </div>
+          <Card className="p-4 md:p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 place-items-center">
+              <SmileyButton type="excellent"   label="Excellent"   onClick={() => handleVote('excellent')} />
+              <SmileyButton type="bien"        label="Bien"        onClick={() => handleVote('bien')} />
+              <SmileyButton type="moyen"       label="Moyen"       onClick={() => handleVote('moyen')} />
+              <SmileyButton type="insuffisant" label="Insuffisant" onClick={() => handleVote('insuffisant')} />
             </div>
           </Card>
         </TabsContent>
 
+        {/* ADMIN */}
         <TabsContent value="admin" className="mt-4">
-          <Card className="p-6 space-y-6">
-            {/* Résumé rapide (compteur smileys) */}
+          <Card className="p-4 md:p-6 space-y-6">
+            {/* Résumé (compteur smileys) */}
             <div className="flex flex-col space-y-2">
               <h3 className="font-medium">Résumé des votes (smileys)</h3>
               <ul className="text-sm opacity-80">
@@ -236,7 +241,7 @@ Insuffisant: ${votes.insuffisant}`;
               )}
             </div>
 
-            {/* Derniers votes (date — tranche — appréciation) */}
+            {/* Derniers votes */}
             <div className="space-y-2">
               <h3 className="font-medium">Derniers votes</h3>
               {stored.length === 0 ? (
@@ -252,8 +257,8 @@ Insuffisant: ${votes.insuffisant}`;
               )}
             </div>
 
-            {/* Boutons existants */}
-            <div className="flex gap-3">
+            {/* Actions admin */}
+            <div className="flex flex-wrap gap-3">
               <Button onClick={resetVotes} variant="outline" className="flex items-center gap-2">
                 <RotateCcw className="w-4 h-4" />
                 Réinitialiser
@@ -264,7 +269,7 @@ Insuffisant: ${votes.insuffisant}`;
                 Exporter les résultats
               </Button>
 
-              <Button onClick={() => setActiveTab('vote')} variant="default" className="ml-auto">
+              <Button onClick={() => setActiveTab('vote')} variant="default" className="md:ml-auto">
                 Retour au vote
               </Button>
             </div>
