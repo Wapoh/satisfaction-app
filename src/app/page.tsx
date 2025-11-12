@@ -18,7 +18,7 @@ export default function Home() {
   const [err, setErr] = useState<string | null>(null);
   const [data, setData] = useState<Feedback[]>([]);
 
-  // Charge les anciens retours (si besoin)
+  // Charger les anciens retours (si besoin)
   useEffect(() => {
     const raw =
       typeof window !== "undefined"
@@ -77,6 +77,11 @@ export default function Home() {
           <AgeTiles value={age as AgeGroup} onChange={setAge} required />
           {err && <p className="mt-3 text-red-600 text-center">{err}</p>}
         </section>
+
+        {/* 🔹 Phrase au-dessus des smileys */}
+        <h2 className="text-center text-2xl font-semibold text-gray-800 mt-10">
+          Qu&apos;avez-vous pensé de cet événement culturel ?
+        </h2>
 
         {/* 🔹 Smileys de satisfaction */}
         <SatisfactionApp onVote={handleVote} />
