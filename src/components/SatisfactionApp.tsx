@@ -176,11 +176,21 @@ Insuffisant: ${votes.insuffisant}`;
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative">
         {/* Zone d’accès admin (triple clic) */}
-        <div
-          className="w-6 h-6 absolute top-2 right-2 cursor-default"
-          onClick={handleLogoClick}
-          title="Zone d'accès administrateur"
-        />
+        {/* Zone admin : triple clic pour ouvrir l'onglet admin */}
+<div
+  onClick={handleLogoClick}
+  title="Zone d'accès administrateur"
+  className="
+    absolute top-4 right-4 
+    w-10 h-10 md:w-12 md:h-12 
+    rounded-full cursor-pointer 
+    hover:ring-2 hover:ring-gray-400/40
+    active:scale-95 transition
+    bg-transparent
+  "
+  style={{ zIndex: 50 }}
+/>
+
 
         {/* VOTE */}
         <TabsContent value="vote" className="mt-4">
