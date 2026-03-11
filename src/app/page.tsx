@@ -72,13 +72,10 @@ export default function Home() {
 
       <div className="container mx-auto px-4 py-8 space-y-10">
 
-        {/* Logo TernoisCom */}
+        {/* Logo */}
 
         <div className="flex justify-center">
-          <button
-            onClick={handleLogoClick}
-            className="focus:outline-none"
-          >
+          <button onClick={handleLogoClick}>
             <Image
               src="/640px-TernoisCom_logo_2017.png"
               alt="Logo TernoisCom"
@@ -89,35 +86,37 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Bloc image + tranche âge */}
+        {/* Bloc affiche + tranche âge */}
 
-        <section className="mx-auto max-w-5xl">
+        <section className="mx-auto max-w-6xl flex gap-8">
 
-          <div className="flex items-center gap-10 bg-white border rounded-2xl shadow-sm p-6">
+          {/* Encadré affiche */}
 
-            {/* Image évènement */}
+          <div className="w-64 bg-white border rounded-2xl shadow-sm p-4 flex justify-center">
+            <Image
+              src="/evenement-culturel.png"
+              alt="Affiche évènement culturel"
+              width={240}
+              height={360}
+              className="rounded-xl"
+            />
+          </div>
 
-            <div className="w-40 shrink-0">
-              <Image
-                src="/evenement-culturel.png"
-                alt="Illustration évènement culturel"
-                width={160}
-                height={160}
-                className="rounded-xl"
-              />
-            </div>
+          {/* Encadré tranche âge */}
 
-            {/* Tranche d'âge */}
+          <div className="flex-1 bg-white border rounded-2xl shadow-sm p-6">
 
-            <div className="flex-1">
-              <AgeTiles value={age as AgeGroup} onChange={setAge} required />
+            <AgeTiles
+              value={age as AgeGroup}
+              onChange={setAge}
+              required
+            />
 
-              {err && (
-                <p className="mt-3 text-red-600">
-                  {err}
-                </p>
-              )}
-            </div>
+            {err && (
+              <p className="mt-3 text-red-600">
+                {err}
+              </p>
+            )}
 
           </div>
 
