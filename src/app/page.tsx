@@ -21,21 +21,24 @@ export default function Home() {
 
   const [age, setAge] = useState<AgeGroup | "">("");
   const [err, setErr] = useState<string | null>(null);
+  const [adminTrigger, setAdminTrigger] = useState(0);
 
   function saveFeedback(feedback: Feedback) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const existing = raw ? JSON.parse(raw) : [];
-
       const updated = [feedback, ...existing];
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch (e) {
-      console.error("Erreur sauvegarde", e);
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde :", error);
     }
   }
 
-  function handleSubmit(source: DiscoverySource, expectation: ExpectationAnswer) {
+  function handleSubmit(
+    source: DiscoverySource,
+    expectation: ExpectationAnswer
+  ) {
     if (!age) {
       setErr("Choisis une tranche d’âge avant de répondre.");
       return;
@@ -57,47 +60,46 @@ export default function Home() {
 
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch {}
+    } catch {
+      // rien
+    }
+  }
+
+  function handleLogoTripleClick() {
+    setAdminTrigger((prev) => prev + 1);
   }
 
   return (
     <main className="min-h-screen bg-gray-50">
-
       <div className="container mx-auto px-4 py-8 space-y-8">
-
         <div className="flex justify-center">
-          <Image
-            src="/640px-TernoisCom_logo_2017.png"
-            alt="Logo TernoisCom"
-            width={500}
-            height={200}
-            priority
-          />
+          <button
+            type="button"
+            onClick={handleLogoTripleClick}
+            className="rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+            aria-label="Logo TernoisCom - accès admin"
+          >
+            <Image
+              src="/640px-TernoisCom_logo_2017.png"
+              alt="Logo TernoisCom"
+              width={500}
+              height={200}
+              priority
+            />
+          </button>
         </div>
 
         <section className="mx-auto max-w-2xl rounded-2xl border bg-white p-6 shadow-sm">
-          <AgeTiles
-            value={age as AgeGroup}
-            onChange={setAge}
-            required
-          />
+          <AgeTiles value={age as AgeGroup} onChange={setAge} required />
 
-          {err && (
-            <p className="mt-3 text-red-600 text-center">
-              {err}
-            </p>
-          )}
+          {err && <p className="mt-3 text-center text-red-600">{err}</p>}
         </section>
-
-        <h2 className="text-center text-2xl font-semibold text-gray-800 mt-10">
-          Qu&apos;avez-vous pensé de cet événement culturel ?
-        </h2>
 
         <SatisfactionApp
           onSubmit={handleSubmit}
           onResetAll={handleResetAll}
+          adminTrigger={adminTrigger}
         />
-
       </div>
     </main>
   );

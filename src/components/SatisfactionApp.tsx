@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,7 +12,7 @@ export type DiscoverySource =
   | "Presse"
   | "Site internet"
   | "Bouche à oreille"
-  | "Médiathèque / École de musique / structures TernoisCom";
+  | "Médiathèque / École de musique / autres structures TernoisCom";
 
 export type ExpectationAnswer =
   | "Tout à fait"
@@ -31,17 +31,39 @@ type StoredFeedback = {
 
 const STORAGE_KEY = "satisfaction-feedbacks";
 
+const DISCOVERY_OPTIONS: DiscoverySource[] = [
+  "Réseaux sociaux",
+  "Affiche / flyer",
+  "Presse",
+  "Site internet",
+  "Bouche à oreille",
+  "Médiathèque / École de musique / autres structures TernoisCom",
+];
+
+const EXPECTATION_OPTIONS: ExpectationAnswer[] = [
+  "Tout à fait",
+  "Plutôt oui",
+  "Plutôt non",
+  "Pas vraiment",
+];
+
 export default function SatisfactionApp({
   onSubmit,
   onResetAll,
+  adminTrigger,
 }: {
   onSubmit?: (source: DiscoverySource, expectation: ExpectationAnswer) => void;
   onResetAll?: () => void;
+  adminTrigger: number;
 }) {
   const [activeTab, setActiveTab] = useState("vote");
   const [source, setSource] = useState<DiscoverySource | "">("");
   const [expectation, setExpectation] = useState<ExpectationAnswer | "">("");
   const [stored, setStored] = useState<StoredFeedback[]>([]);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const clickCountRef = useRef(0);
+  const lastClickRef = useRef(0);
 
   const loadData = () => {
     try {
@@ -56,35 +78,64 @@ export default function SatisfactionApp({
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (adminTrigger === 0) return;
+
+    const now = Date.now();
+
+    if (now - lastClickRef.current < 700) {
+      clickCountRef.current += 1;
+    } else {
+      clickCountRef.current = 1;
+    }
+
+    lastClickRef.current = now;
+
+    if (clickCountRef.current >= 3) {
+      setActiveTab("admin");
+      clickCountRef.current = 0;
+    }
+  }, [adminTrigger]);
+
   const handleSubmit = () => {
-    if (!source || !expectation) return;
+    if (!source || !expectation) {
+      setFormError("Merci de sélectionner une réponse dans les deux menus.");
+      return;
+    }
 
+    setFormError(null);
     onSubmit?.(source, expectation);
-
     setSource("");
     setExpectation("");
-
     loadData();
   };
 
   const resetVotes = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // rien
+    }
+
     setStored([]);
+    setSource("");
+    setExpectation("");
+    setFormError(null);
     onResetAll?.();
   };
 
   const exportResults = () => {
     const data = stored
       .map(
-        (v) =>
-          `${new Date(v.createdAt).toLocaleString()} — ${v.age} — ${v.source} — ${v.expectation}`
+        (entry) =>
+          `${new Date(entry.createdAt).toLocaleString()} — ${entry.age} — ${entry.source} — ${entry.expectation}`
       )
       .join("\n");
 
-    const blob = new Blob([data], { type: "text/plain" });
+    const blob = new Blob([data], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
+
     a.href = url;
     a.download = "resultats-satisfaction.txt";
     a.click();
@@ -92,142 +143,162 @@ export default function SatisfactionApp({
     URL.revokeObjectURL(url);
   };
 
-  let clickCount = 0;
-  let lastClick = 0;
+  const sourceCounts = useMemo(() => {
+    const counts: Record<DiscoverySource, number> = {
+      "Réseaux sociaux": 0,
+      "Affiche / flyer": 0,
+      Presse: 0,
+      "Site internet": 0,
+      "Bouche à oreille": 0,
+      "Médiathèque / École de musique / autres structures TernoisCom": 0,
+    };
 
-  const handleAdminClick = () => {
-    const now = Date.now();
+    stored.forEach((entry) => {
+      counts[entry.source] += 1;
+    });
 
-    if (now - lastClick < 700) {
-      clickCount++;
+    return counts;
+  }, [stored]);
 
-      if (clickCount >= 3) {
-        setActiveTab("admin");
-        clickCount = 0;
-      }
-    } else {
-      clickCount = 1;
-    }
+  const expectationCounts = useMemo(() => {
+    const counts: Record<ExpectationAnswer, number> = {
+      "Tout à fait": 0,
+      "Plutôt oui": 0,
+      "Plutôt non": 0,
+      "Pas vraiment": 0,
+    };
 
-    lastClick = now;
-  };
+    stored.forEach((entry) => {
+      counts[entry.expectation] += 1;
+    });
+
+    return counts;
+  }, [stored]);
 
   return (
-    <div className="max-w-6xl mx-auto relative">
-
-      {/* bouton admin discret */}
-      <div
-        onClick={handleAdminClick}
-        className="absolute right-2 top-2 cursor-pointer text-xs bg-gray-200/60 hover:bg-gray-300 px-2 py-1 rounded"
-      >
-        Admin
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-
-        {/* PARTIE QUESTIONNAIRE */}
-
-        <TabsContent value="vote">
+    <div className="max-w-6xl mx-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsContent value="vote" className="mt-0">
           <Card className="p-8">
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-
+            <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
               <div>
-                <h3 className="font-semibold mb-2">
-                  Comment avez-vous connu l'évènement ?
+                <h3 className="mb-2 text-2xl font-semibold">
+                  Comment avez-vous connu l&apos;évènement ?
                 </h3>
 
                 <select
-                  className="border rounded p-2 w-full"
+                  className="w-full rounded-md border p-3 text-lg"
                   value={source}
                   onChange={(e) =>
-                    setSource(e.target.value as DiscoverySource)
+                    setSource(e.target.value as DiscoverySource | "")
                   }
                 >
                   <option value="">Choisir...</option>
-                  <option>Réseaux sociaux</option>
-                  <option>Affiche / flyer</option>
-                  <option>Presse</option>
-                  <option>Site internet</option>
-                  <option>Bouche à oreille</option>
-                  <option>
-                    Médiathèque / École de musique / structures TernoisCom
-                  </option>
+                  {DISCOVERY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">
+                <h3 className="mb-2 text-2xl font-semibold">
                   Cet évènement correspondait-il à vos attentes ?
                 </h3>
 
                 <select
-                  className="border rounded p-2 w-full"
+                  className="w-full rounded-md border p-3 text-lg"
                   value={expectation}
                   onChange={(e) =>
-                    setExpectation(e.target.value as ExpectationAnswer)
+                    setExpectation(e.target.value as ExpectationAnswer | "")
                   }
                 >
                   <option value="">Choisir...</option>
-                  <option>Tout à fait</option>
-                  <option>Plutôt oui</option>
-                  <option>Plutôt non</option>
-                  <option>Pas vraiment</option>
+                  {EXPECTATION_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
               </div>
-
             </div>
+
+            {formError && (
+              <p className="mt-4 text-center text-red-600">{formError}</p>
+            )}
 
             <div className="mt-8 text-center">
               <Button onClick={handleSubmit}>Valider la réponse</Button>
             </div>
-
           </Card>
         </TabsContent>
 
-        {/* PARTIE ADMIN */}
-
-        <TabsContent value="admin">
-          <Card className="p-6 space-y-6">
-
-            <h3 className="font-semibold">Derniers votes</h3>
-
-            {stored.length === 0 ? (
-              <p>Aucune réponse.</p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {stored.slice(0, 20).map((v, i) => (
-                  <li key={i} className="border p-2 rounded">
-                    {new Date(v.createdAt).toLocaleString()} — {v.age} —{" "}
-                    {v.source} — {v.expectation}
+        <TabsContent value="admin" className="mt-0">
+          <Card className="space-y-6 p-6">
+            <div className="space-y-2">
+              <h3 className="font-semibold">Résumé par provenance</h3>
+              <ul className="space-y-1 text-sm">
+                {DISCOVERY_OPTIONS.map((option) => (
+                  <li key={option}>
+                    {option} : {sourceCounts[option]}
                   </li>
                 ))}
               </ul>
-            )}
+            </div>
 
-            <div className="flex gap-3">
+            <div className="space-y-2">
+              <h3 className="font-semibold">Résumé par attentes</h3>
+              <ul className="space-y-1 text-sm">
+                {EXPECTATION_OPTIONS.map((option) => (
+                  <li key={option}>
+                    {option} : {expectationCounts[option]}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-              <Button onClick={resetVotes} variant="outline">
-                <RotateCcw className="w-4 h-4 mr-2" />
+            <div className="space-y-2">
+              <h3 className="font-semibold">Dernières réponses</h3>
+              {stored.length === 0 ? (
+                <p className="text-sm opacity-70">Aucune réponse.</p>
+              ) : (
+                <ul className="space-y-2 text-sm">
+                  {stored.slice(0, 20).map((entry, index) => (
+                    <li key={index} className="rounded border p-2">
+                      {new Date(entry.createdAt).toLocaleString()} — {entry.age} —{" "}
+                      {entry.source} — {entry.expectation}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={resetVotes}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
                 Réinitialiser
               </Button>
 
-              <Button onClick={exportResults} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
+              <Button
+                onClick={exportResults}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
                 Exporter
               </Button>
 
-              <Button
-                onClick={() => setActiveTab("vote")}
-                className="ml-auto"
-              >
+              <Button onClick={() => setActiveTab("vote")} className="md:ml-auto">
                 Retour
               </Button>
-
             </div>
           </Card>
         </TabsContent>
-
       </Tabs>
     </div>
   );
