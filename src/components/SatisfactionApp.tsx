@@ -104,23 +104,18 @@ export default function SatisfactionApp({
     }
 
     setFormError(null);
-
     onSubmit?.(source, expectation);
-
     setSource("");
     setExpectation("");
-
     loadData();
   };
 
   const resetVotes = () => {
     localStorage.removeItem(STORAGE_KEY);
-
     setStored([]);
     setSource("");
     setExpectation("");
     setFormError(null);
-
     onResetAll?.();
   };
 
@@ -178,20 +173,17 @@ export default function SatisfactionApp({
   return (
     <div className="mx-auto max-w-6xl">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-
         <TabsContent value="vote">
-          <Card className="p-8">
-
+          <Card className="border-[#cfe4f1] bg-white p-8 shadow-sm">
             <div className="grid grid-cols-2 gap-8">
-
               <div className="flex flex-col">
-                <h3 className="mb-2 text-base font-bold">
-                  Comment avez-vous connu l'évènement ?
+                <h3 className="mb-2 text-base font-bold text-[#1f5f8b]">
+                  Comment avez-vous connu l&apos;évènement ?
                 </h3>
 
                 <select
                   required
-                  className="w-full rounded-md border p-2"
+                  className="w-full rounded-lg border border-[#8fc2dd] bg-[#f4fbff] p-3 text-sm text-[#1f5f8b] outline-none transition focus:border-[#3aa76d] focus:ring-2 focus:ring-[#3aa76d]/25"
                   value={source}
                   onChange={(e) =>
                     setSource(e.target.value as DiscoverySource)
@@ -205,13 +197,13 @@ export default function SatisfactionApp({
               </div>
 
               <div className="flex flex-col">
-                <h3 className="mb-2 text-base font-bold">
+                <h3 className="mb-2 text-base font-bold text-[#1f5f8b]">
                   Cet évènement correspondait-il à vos attentes ?
                 </h3>
 
                 <select
                   required
-                  className="w-full rounded-md border p-2"
+                  className="w-full rounded-lg border border-[#8fc2dd] bg-[#f4fbff] p-3 text-sm text-[#1f5f8b] outline-none transition focus:border-[#3aa76d] focus:ring-2 focus:ring-[#3aa76d]/25"
                   value={expectation}
                   onChange={(e) =>
                     setExpectation(e.target.value as ExpectationAnswer)
@@ -223,32 +215,33 @@ export default function SatisfactionApp({
                   ))}
                 </select>
               </div>
-
             </div>
 
             {formError && (
-              <p className="mt-4 text-center text-red-600">{formError}</p>
+              <p className="mt-4 text-center font-medium text-red-600">
+                {formError}
+              </p>
             )}
 
             <div className="mt-8 text-center">
-              <Button onClick={handleSubmit}>
+              <Button
+                onClick={handleSubmit}
+                className="border-0 bg-[#3aa76d] px-6 py-2 font-semibold text-white hover:bg-[#2f8d5c]"
+              >
                 Valider la réponse
               </Button>
             </div>
-
           </Card>
         </TabsContent>
 
         <TabsContent value="admin">
-
-          <Card className="space-y-6 p-6">
-
+          <Card className="space-y-6 border-[#cfe4f1] bg-white p-6 shadow-sm">
             <div>
-              <h3 className="font-semibold mb-2">
+              <h3 className="mb-2 font-semibold text-[#1f5f8b]">
                 Résumé par provenance
               </h3>
 
-              <ul className="text-sm space-y-1">
+              <ul className="space-y-1 text-sm text-slate-700">
                 {DISCOVERY_OPTIONS.map((option) => (
                   <li key={option}>
                     {option} : {sourceCounts[option]}
@@ -258,11 +251,11 @@ export default function SatisfactionApp({
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">
+              <h3 className="mb-2 font-semibold text-[#1f5f8b]">
                 Résumé par attentes
               </h3>
 
-              <ul className="text-sm space-y-1">
+              <ul className="space-y-1 text-sm text-slate-700">
                 {EXPECTATION_OPTIONS.map((option) => (
                   <li key={option}>
                     {option} : {expectationCounts[option]}
@@ -272,32 +265,32 @@ export default function SatisfactionApp({
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">
+              <h3 className="mb-2 font-semibold text-[#1f5f8b]">
                 Dernières réponses
               </h3>
 
               {stored.length === 0 ? (
-                <p className="text-sm opacity-70">
-                  Aucune réponse.
-                </p>
+                <p className="text-sm opacity-70">Aucune réponse.</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {stored.slice(0, 20).map((entry, index) => (
-                    <li key={index} className="border p-2 rounded">
-                      {new Date(entry.createdAt).toLocaleString()} —{" "}
-                      {entry.age} — {entry.source} — {entry.expectation}
+                    <li
+                      key={index}
+                      className="rounded-lg border border-[#d8e9f3] bg-[#f8fcfe] p-3"
+                    >
+                      {new Date(entry.createdAt).toLocaleString()} — {entry.age} —{" "}
+                      {entry.source} — {entry.expectation}
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            <div className="flex gap-3 flex-wrap">
-
+            <div className="flex flex-wrap gap-3">
               <Button
                 onClick={resetVotes}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 border-[#8fc2dd] text-[#1f5f8b] hover:bg-[#eef8fc]"
               >
                 <RotateCcw className="h-4 w-4" />
                 Réinitialiser
@@ -306,7 +299,7 @@ export default function SatisfactionApp({
               <Button
                 onClick={exportResults}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 border-[#8fc2dd] text-[#1f5f8b] hover:bg-[#eef8fc]"
               >
                 <Download className="h-4 w-4" />
                 Exporter
@@ -314,17 +307,13 @@ export default function SatisfactionApp({
 
               <Button
                 onClick={() => setActiveTab("vote")}
-                className="ml-auto"
+                className="ml-auto bg-[#1f5f8b] text-white hover:bg-[#184b6d]"
               >
                 Retour
               </Button>
-
             </div>
-
           </Card>
-
         </TabsContent>
-
       </Tabs>
     </div>
   );
