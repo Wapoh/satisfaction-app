@@ -99,7 +99,7 @@ export default function SatisfactionApp({
 
   const handleSubmit = () => {
     if (!source || !expectation) {
-      setFormError("Merci de sélectionner une réponse dans les deux menus.");
+      setFormError("Veuillez répondre aux deux questions.");
       return;
     }
 
@@ -133,7 +133,6 @@ export default function SatisfactionApp({
       .join("\n");
 
     const blob = new Blob([data], { type: "text/plain;charset=utf-8" });
-
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
@@ -180,19 +179,18 @@ export default function SatisfactionApp({
     <div className="mx-auto max-w-6xl">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
 
-        {/* MODE VOTE */}
-
         <TabsContent value="vote">
           <Card className="p-8">
 
             <div className="grid grid-cols-2 gap-8">
 
               <div className="flex flex-col">
-                <h3 className="mb-2 text-base font-medium">
+                <h3 className="mb-2 text-base font-bold">
                   Comment avez-vous connu l'évènement ?
                 </h3>
 
                 <select
+                  required
                   className="w-full rounded-md border p-2"
                   value={source}
                   onChange={(e) =>
@@ -200,7 +198,6 @@ export default function SatisfactionApp({
                   }
                 >
                   <option value="">Choisir...</option>
-
                   {DISCOVERY_OPTIONS.map((option) => (
                     <option key={option}>{option}</option>
                   ))}
@@ -208,11 +205,12 @@ export default function SatisfactionApp({
               </div>
 
               <div className="flex flex-col">
-                <h3 className="mb-2 text-base font-medium">
+                <h3 className="mb-2 text-base font-bold">
                   Cet évènement correspondait-il à vos attentes ?
                 </h3>
 
                 <select
+                  required
                   className="w-full rounded-md border p-2"
                   value={expectation}
                   onChange={(e) =>
@@ -220,7 +218,6 @@ export default function SatisfactionApp({
                   }
                 >
                   <option value="">Choisir...</option>
-
                   {EXPECTATION_OPTIONS.map((option) => (
                     <option key={option}>{option}</option>
                   ))}
@@ -241,8 +238,6 @@ export default function SatisfactionApp({
 
           </Card>
         </TabsContent>
-
-        {/* MODE ADMIN */}
 
         <TabsContent value="admin">
 
