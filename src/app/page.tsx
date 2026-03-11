@@ -26,7 +26,7 @@ export default function Home() {
   function saveFeedback(feedback: Feedback) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      const existing = raw ? JSON.parse(raw) : [];
+      const existing: Feedback[] = raw ? JSON.parse(raw) : [];
       const updated = [feedback, ...existing];
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -65,7 +65,7 @@ export default function Home() {
     }
   }
 
-  function handleLogoTripleClick() {
+  function handleLogoClick() {
     setAdminTrigger((prev) => prev + 1);
   }
 
@@ -75,8 +75,8 @@ export default function Home() {
         <div className="flex justify-center">
           <button
             type="button"
-            onClick={handleLogoTripleClick}
-            className="rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+            onClick={handleLogoClick}
+            className="rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
             aria-label="Logo TernoisCom - accès admin"
           >
             <Image

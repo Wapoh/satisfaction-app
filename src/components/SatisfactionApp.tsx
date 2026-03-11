@@ -176,12 +176,12 @@ export default function SatisfactionApp({
   }, [stored]);
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="mx-auto max-w-6xl">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsContent value="vote" className="mt-0">
           <Card className="p-8">
-            <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-              <div>
+            <div className="grid grid-cols-2 gap-8 items-start">
+              <div className="flex flex-col w-full">
                 <h3 className="mb-2 text-2xl font-semibold">
                   Comment avez-vous connu l&apos;évènement ?
                 </h3>
@@ -202,7 +202,7 @@ export default function SatisfactionApp({
                 </select>
               </div>
 
-              <div>
+              <div className="flex flex-col w-full">
                 <h3 className="mb-2 text-2xl font-semibold">
                   Cet évènement correspondait-il à vos attentes ?
                 </h3>
