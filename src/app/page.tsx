@@ -92,13 +92,13 @@ export default function Home() {
 
           {/* Affiche (sans cadre) */}
 
-          <div className="w-96">
+      <div className="w-72">
   <Image
     src="/evenement-culturel.png"
-    alt="Affiche évènement culturel"
-    width={420}
-    height={260}
-    className="rounded-xl shadow-lg"
+    alt="Affiche saison culturelle"
+    width={260}
+    height={360}
+    className="rounded-xl shadow-md"
   />
 </div>
 
