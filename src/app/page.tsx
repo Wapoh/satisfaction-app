@@ -88,23 +88,23 @@ export default function Home() {
 
         {/* Bloc affiche + tranche âge */}
 
-        <section className="mx-auto max-w-6xl flex gap-8">
+        <section className="mx-auto max-w-5xl flex items-center gap-10">
 
-          {/* Encadré affiche */}
+          {/* Affiche (sans cadre) */}
 
-          <div className="w-64 bg-white border rounded-2xl shadow-sm p-4 flex justify-center">
+          <div className="w-56">
             <Image
               src="/evenement-culturel.png"
               alt="Affiche évènement culturel"
-              width={240}
-              height={360}
-              className="rounded-xl"
+              width={220}
+              height={330}
+              className="rounded-xl shadow-md"
             />
           </div>
 
-          {/* Encadré tranche âge */}
+          {/* Tranches d'âge plus compact */}
 
-          <div className="flex-1 bg-white border rounded-2xl shadow-sm p-6">
+          <div className="flex-1 max-w-3xl">
 
             <AgeTiles
               value={age as AgeGroup}
