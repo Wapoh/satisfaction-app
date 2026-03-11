@@ -92,15 +92,15 @@ export default function Home() {
 
           {/* Affiche (sans cadre) */}
 
-          <div className="w-56">
-            <Image
-              src="/evenement-culturel.png"
-              alt="Affiche évènement culturel"
-              width={220}
-              height={330}
-              className="rounded-xl shadow-md"
-            />
-          </div>
+          <div className="w-96">
+  <Image
+    src="/evenement-culturel.png"
+    alt="Affiche évènement culturel"
+    width={420}
+    height={260}
+    className="rounded-xl shadow-lg"
+  />
+</div>
 
           {/* Tranches d'âge plus compact */}
 
