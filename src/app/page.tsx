@@ -31,7 +31,7 @@ export default function Home() {
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde :", error);
+      console.error("Erreur sauvegarde :", error);
     }
   }
 
@@ -40,7 +40,7 @@ export default function Home() {
     expectation: ExpectationAnswer
   ) {
     if (!age) {
-      setErr("Choisis une tranche d’âge avant de répondre.");
+      setErr("Choisissez votre tranche d’âge.");
       return;
     }
 
@@ -60,9 +60,7 @@ export default function Home() {
 
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // rien
-    }
+    } catch {}
   }
 
   function handleLogoClick() {
@@ -71,36 +69,70 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 space-y-8">
+
+      <div className="container mx-auto px-4 py-8 space-y-10">
+
+        {/* Logo TernoisCom */}
+
         <div className="flex justify-center">
           <button
-            type="button"
             onClick={handleLogoClick}
-            className="rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
-            aria-label="Logo TernoisCom - accès admin"
+            className="focus:outline-none"
           >
             <Image
               src="/640px-TernoisCom_logo_2017.png"
               alt="Logo TernoisCom"
-              width={500}
-              height={200}
+              width={420}
+              height={160}
               priority
             />
           </button>
         </div>
 
-        <section className="mx-auto max-w-2xl rounded-2xl border bg-white p-6 shadow-sm">
-          <AgeTiles value={age as AgeGroup} onChange={setAge} required />
+        {/* Bloc image + tranche âge */}
 
-          {err && <p className="mt-3 text-center text-red-600">{err}</p>}
+        <section className="mx-auto max-w-5xl">
+
+          <div className="flex items-center gap-10 bg-white border rounded-2xl shadow-sm p-6">
+
+            {/* Image évènement */}
+
+            <div className="w-40 shrink-0">
+              <Image
+                src="/evenement-culturel.png"
+                alt="Illustration évènement culturel"
+                width={160}
+                height={160}
+                className="rounded-xl"
+              />
+            </div>
+
+            {/* Tranche d'âge */}
+
+            <div className="flex-1">
+              <AgeTiles value={age as AgeGroup} onChange={setAge} required />
+
+              {err && (
+                <p className="mt-3 text-red-600">
+                  {err}
+                </p>
+              )}
+            </div>
+
+          </div>
+
         </section>
+
+        {/* Questionnaire */}
 
         <SatisfactionApp
           onSubmit={handleSubmit}
           onResetAll={handleResetAll}
           adminTrigger={adminTrigger}
         />
+
       </div>
+
     </main>
   );
 }
