@@ -104,23 +104,23 @@ export default function SatisfactionApp({
     }
 
     setFormError(null);
+
     onSubmit?.(source, expectation);
+
     setSource("");
     setExpectation("");
+
     loadData();
   };
 
   const resetVotes = () => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // rien
-    }
+    localStorage.removeItem(STORAGE_KEY);
 
     setStored([]);
     setSource("");
     setExpectation("");
     setFormError(null);
+
     onResetAll?.();
   };
 
@@ -133,9 +133,10 @@ export default function SatisfactionApp({
       .join("\n");
 
     const blob = new Blob([data], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
 
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
     a.href = url;
     a.download = "resultats-satisfaction.txt";
     a.click();
@@ -177,51 +178,55 @@ export default function SatisfactionApp({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsContent value="vote" className="mt-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+
+        {/* MODE VOTE */}
+
+        <TabsContent value="vote">
           <Card className="p-8">
-            <div className="grid grid-cols-2 gap-8 items-start">
-              <div className="flex flex-col w-full">
-                <h3 className="mb-2 text-2xl font-semibold">
-                  Comment avez-vous connu l&apos;évènement ?
+
+            <div className="grid grid-cols-2 gap-8">
+
+              <div className="flex flex-col">
+                <h3 className="mb-2 text-base font-medium">
+                  Comment avez-vous connu l'évènement ?
                 </h3>
 
                 <select
-                  className="w-full rounded-md border p-3 text-lg"
+                  className="w-full rounded-md border p-2"
                   value={source}
                   onChange={(e) =>
-                    setSource(e.target.value as DiscoverySource | "")
+                    setSource(e.target.value as DiscoverySource)
                   }
                 >
                   <option value="">Choisir...</option>
+
                   {DISCOVERY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
+                    <option key={option}>{option}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex flex-col w-full">
-                <h3 className="mb-2 text-2xl font-semibold">
+              <div className="flex flex-col">
+                <h3 className="mb-2 text-base font-medium">
                   Cet évènement correspondait-il à vos attentes ?
                 </h3>
 
                 <select
-                  className="w-full rounded-md border p-3 text-lg"
+                  className="w-full rounded-md border p-2"
                   value={expectation}
                   onChange={(e) =>
-                    setExpectation(e.target.value as ExpectationAnswer | "")
+                    setExpectation(e.target.value as ExpectationAnswer)
                   }
                 >
                   <option value="">Choisir...</option>
+
                   {EXPECTATION_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
+                    <option key={option}>{option}</option>
                   ))}
                 </select>
               </div>
+
             </div>
 
             {formError && (
@@ -229,16 +234,26 @@ export default function SatisfactionApp({
             )}
 
             <div className="mt-8 text-center">
-              <Button onClick={handleSubmit}>Valider la réponse</Button>
+              <Button onClick={handleSubmit}>
+                Valider la réponse
+              </Button>
             </div>
+
           </Card>
         </TabsContent>
 
-        <TabsContent value="admin" className="mt-0">
+        {/* MODE ADMIN */}
+
+        <TabsContent value="admin">
+
           <Card className="space-y-6 p-6">
-            <div className="space-y-2">
-              <h3 className="font-semibold">Résumé par provenance</h3>
-              <ul className="space-y-1 text-sm">
+
+            <div>
+              <h3 className="font-semibold mb-2">
+                Résumé par provenance
+              </h3>
+
+              <ul className="text-sm space-y-1">
                 {DISCOVERY_OPTIONS.map((option) => (
                   <li key={option}>
                     {option} : {sourceCounts[option]}
@@ -247,9 +262,12 @@ export default function SatisfactionApp({
               </ul>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="font-semibold">Résumé par attentes</h3>
-              <ul className="space-y-1 text-sm">
+            <div>
+              <h3 className="font-semibold mb-2">
+                Résumé par attentes
+              </h3>
+
+              <ul className="text-sm space-y-1">
                 {EXPECTATION_OPTIONS.map((option) => (
                   <li key={option}>
                     {option} : {expectationCounts[option]}
@@ -258,23 +276,29 @@ export default function SatisfactionApp({
               </ul>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="font-semibold">Dernières réponses</h3>
+            <div>
+              <h3 className="font-semibold mb-2">
+                Dernières réponses
+              </h3>
+
               {stored.length === 0 ? (
-                <p className="text-sm opacity-70">Aucune réponse.</p>
+                <p className="text-sm opacity-70">
+                  Aucune réponse.
+                </p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {stored.slice(0, 20).map((entry, index) => (
-                    <li key={index} className="rounded border p-2">
-                      {new Date(entry.createdAt).toLocaleString()} — {entry.age} —{" "}
-                      {entry.source} — {entry.expectation}
+                    <li key={index} className="border p-2 rounded">
+                      {new Date(entry.createdAt).toLocaleString()} —{" "}
+                      {entry.age} — {entry.source} — {entry.expectation}
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex gap-3 flex-wrap">
+
               <Button
                 onClick={resetVotes}
                 variant="outline"
@@ -293,12 +317,19 @@ export default function SatisfactionApp({
                 Exporter
               </Button>
 
-              <Button onClick={() => setActiveTab("vote")} className="md:ml-auto">
+              <Button
+                onClick={() => setActiveTab("vote")}
+                className="ml-auto"
+              >
                 Retour
               </Button>
+
             </div>
+
           </Card>
+
         </TabsContent>
+
       </Tabs>
     </div>
   );
