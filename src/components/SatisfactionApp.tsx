@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,8 +16,8 @@ interface VoteCount {
 
 export type VoteType = keyof VoteCount;
 
-// ---- Données admin (lecture localStorage)
 type AgeGroup = "-15" | "15-19" | "20-24" | "25-39" | "40-59" | "60+";
+
 const AGE_GROUPS: AgeGroup[] = ["-15", "15-19", "20-24", "25-39", "40-59", "60+"];
 
 type StoredFeedback = {
@@ -28,37 +28,75 @@ type StoredFeedback = {
 
 const STORAGE_KEY = "satisfaction-feedbacks";
 
-function mapRatingToVoteType(r: number): VoteType {
-  if (r >= 5) return "excellent";
-  if (r === 4) return "bien";
-  if (r === 3) return "moyen";
-  return "insuffisant"; // 1..2
+function mapRatingToVoteType(rating: number): VoteType {
+  if (rating >= 5) return "excellent";
+  if (rating === 4) return "bien";
+  if (rating === 3) return "moyen";
+  return "insuffisant";
 }
 
-export default function SatisfactionApp({
-  onVote,
-}: {
-  onVote?: (type: VoteType) => void;
-}) {
-  const [votes, setVotes] = useState<VoteCount>({
+function createEmptyVotes(): VoteCount {
+  return {
     excellent: 0,
     bien: 0,
     moyen: 0,
     insuffisant: 0,
-  });
+  };
+}
 
+function createEmptyMatrix(): Record<VoteType, Record<AgeGroup, number>> {
+  return {
+    excellent: {
+      "-15": 0,
+      "15-19": 0,
+      "20-24": 0,
+      "25-39": 0,
+      "40-59": 0,
+      "60+": 0,
+    },
+    bien: {
+      "-15": 0,
+      "15-19": 0,
+      "20-24": 0,
+      "25-39": 0,
+      "40-59": 0,
+      "60+": 0,
+    },
+    moyen: {
+      "-15": 0,
+      "15-19": 0,
+      "20-24": 0,
+      "25-39": 0,
+      "40-59": 0,
+      "60+": 0,
+    },
+    insuffisant: {
+      "-15": 0,
+      "15-19": 0,
+      "20-24": 0,
+      "25-39": 0,
+      "40-59": 0,
+      "60+": 0,
+    },
+  };
+}
+
+export default function SatisfactionApp({
+  onVote,
+  onResetAll,
+}: {
+  onVote?: (type: VoteType) => void;
+  onResetAll?: () => void;
+}) {
+  const [votes, setVotes] = useState<VoteCount>(createEmptyVotes());
   const [activeTab, setActiveTab] = useState<string>("vote");
   const [showToast, setShowToast] = useState(false);
-
-  // Admin data
   const [stored, setStored] = useState<StoredFeedback[]>([]);
-  const [matrix, setMatrix] =
-    useState<Record<VoteType, Record<AgeGroup, number>> | null>(null);
-
-  // Halo visuel sur le smiley cliqué
+  const [matrix, setMatrix] = useState<Record<VoteType, Record<AgeGroup, number>>>(
+    createEmptyMatrix()
+  );
   const [flash, setFlash] = useState<VoteType | null>(null);
 
-  // === Nouveau système de triple-clic global pour ouvrir l'onglet admin ===
   useEffect(() => {
     let lastClick = 0;
     let count = 0;
@@ -66,7 +104,6 @@ export default function SatisfactionApp({
     const onGlobalClick = (e: MouseEvent) => {
       const { clientX, clientY } = e;
 
-      // Zone cliquable = carré 150px dans le coin supérieur droit
       const withinAdminZone =
         clientX > window.innerWidth - 150 && clientY < 150;
 
@@ -75,7 +112,8 @@ export default function SatisfactionApp({
       const now = Date.now();
 
       if (now - lastClick < 700) {
-        count++;
+        count += 1;
+
         if (count >= 3) {
           setActiveTab("admin");
           count = 0;
@@ -92,43 +130,50 @@ export default function SatisfactionApp({
   }, []);
 
   const handleVote = (type: VoteType) => {
-    // callback vers la page (sauvegarde age + createdAt + rating)
     onVote?.(type);
 
-    // compteur local
-    setVotes((prev) => ({ ...prev, [type]: prev[type] + 1 }));
+    setVotes((prev) => ({
+      ...prev,
+      [type]: prev[type] + 1,
+    }));
+
     setShowToast(true);
 
-    // petite vibration (si supportée) pour retour haptique
     try {
-      (navigator as any)?.vibrate?.(10);
+      (navigator as Navigator & { vibrate?: (pattern: number) => boolean })?.vibrate?.(10);
     } catch {
       // ignore
     }
 
-    // halo visuel
     setFlash(type);
     setTimeout(() => setFlash(null), 250);
 
-    // recharge les données stockées (pour admin en direct)
     try {
       const raw =
         typeof window !== "undefined"
           ? localStorage.getItem(STORAGE_KEY)
           : null;
+
       setStored(raw ? (JSON.parse(raw) as StoredFeedback[]) : []);
     } catch {
-      // ignore
+      setStored([]);
     }
   };
 
   const resetVotes = () => {
-    setVotes({
-      excellent: 0,
-      bien: 0,
-      moyen: 0,
-      insuffisant: 0,
-    });
+    setVotes(createEmptyVotes());
+    setStored([]);
+    setMatrix(createEmptyMatrix());
+    setShowToast(false);
+    setFlash(null);
+
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+
+    onResetAll?.();
   };
 
   const exportResults = () => {
@@ -137,78 +182,45 @@ Excellent: ${votes.excellent}
 Bien: ${votes.bien}
 Moyen: ${votes.moyen}
 Insuffisant: ${votes.insuffisant}`;
+
     const blob = new Blob([data], { type: "text/plain" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
+
     a.href = url;
     a.download = "resultats-satisfaction.txt";
     a.click();
+
     window.URL.revokeObjectURL(url);
   };
 
-  // charge votes stockés au montage
   useEffect(() => {
     try {
       const raw =
         typeof window !== "undefined"
           ? localStorage.getItem(STORAGE_KEY)
           : null;
+
       setStored(raw ? (JSON.parse(raw) as StoredFeedback[]) : []);
     } catch {
       setStored([]);
     }
   }, []);
 
-  // calcule matrice âge × appréciation à l’ouverture de l’admin
   useEffect(() => {
-    if (activeTab !== "admin") return;
+    const base = createEmptyMatrix();
 
-    const base: Record<VoteType, Record<AgeGroup, number>> = {
-      excellent: {
-        "-15": 0,
-        "15-19": 0,
-        "20-24": 0,
-        "25-39": 0,
-        "40-59": 0,
-        "60+": 0,
-      },
-      bien: {
-        "-15": 0,
-        "15-19": 0,
-        "20-24": 0,
-        "25-39": 0,
-        "40-59": 0,
-        "60+": 0,
-      },
-      moyen: {
-        "-15": 0,
-        "15-19": 0,
-        "20-24": 0,
-        "25-39": 0,
-        "40-59": 0,
-        "60+": 0,
-      },
-      insuffisant: {
-        "-15": 0,
-        "15-19": 0,
-        "20-24": 0,
-        "25-39": 0,
-        "40-59": 0,
-        "60+": 0,
-      },
-    };
+    stored.forEach((feedback) => {
+      const voteType = mapRatingToVoteType(feedback.rating);
 
-    (stored || []).forEach((f) => {
-      const col = mapRatingToVoteType(f.rating);
-      if (base[col] && base[col][f.age] !== undefined) {
-        base[col][f.age] += 1;
+      if (base[voteType] && base[voteType][feedback.age] !== undefined) {
+        base[voteType][feedback.age] += 1;
       }
     });
 
     setMatrix(base);
-  }, [activeTab, stored]);
+  }, [stored]);
 
-  // ---- Smileys iPad-friendly
   const SmileySVG = ({
     type,
   }: {
@@ -220,6 +232,7 @@ Insuffisant: ${votes.insuffisant}`;
       moyen: "#FF8C00",
       insuffisant: "#FF4136",
     };
+
     const faces = {
       excellent: (
         <>
@@ -280,6 +293,7 @@ Insuffisant: ${votes.insuffisant}`;
         </>
       ),
     };
+
     return (
       <svg
         viewBox="0 0 100 100"
@@ -293,7 +307,6 @@ Insuffisant: ${votes.insuffisant}`;
     );
   };
 
-  // Bouton “smiley” accessible et large zone de clic
   const SmileyButton = ({
     type,
     label,
@@ -322,7 +335,6 @@ Insuffisant: ${votes.insuffisant}`;
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        {/* Onglet vote */}
         <TabsContent value="vote" className="mt-4">
           <Card className="p-4 md:p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 place-items-center">
@@ -354,10 +366,8 @@ Insuffisant: ${votes.insuffisant}`;
           </Card>
         </TabsContent>
 
-        {/* Onglet admin */}
         <TabsContent value="admin" className="mt-4">
           <Card className="p-4 md:p-6 space-y-6">
-            {/* Résumé (compteur smileys) */}
             <div className="flex flex-col space-y-2">
               <h3 className="font-medium">Résumé des votes (smileys)</h3>
               <ul className="text-sm opacity-80">
@@ -368,71 +378,58 @@ Insuffisant: ${votes.insuffisant}`;
               </ul>
             </div>
 
-            {/* Répartition par tranche d’âge (localStorage) */}
             <div className="space-y-3">
               <h3 className="font-medium">Répartition par tranche d’âge</h3>
-              {!matrix ? (
-                <p className="text-sm opacity-70">Aucune donnée enregistrée.</p>
-              ) : (
-                <div className="overflow-auto">
-                  <table className="min-w-[600px] w-full text-sm border">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="border px-3 py-2 text-left">
-                          Tranche d’âge
-                        </th>
-                        <th className="border px-3 py-2 text-center">
-                          Excellent
-                        </th>
-                        <th className="border px-3 py-2 text-center">Bien</th>
-                        <th className="border px-3 py-2 text-center">Moyen</th>
-                        <th className="border px-3 py-2 text-center">
-                          Insuffisant
-                        </th>
+              <div className="overflow-auto">
+                <table className="min-w-[600px] w-full text-sm border">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="border px-3 py-2 text-left">Tranche d’âge</th>
+                      <th className="border px-3 py-2 text-center">Excellent</th>
+                      <th className="border px-3 py-2 text-center">Bien</th>
+                      <th className="border px-3 py-2 text-center">Moyen</th>
+                      <th className="border px-3 py-2 text-center">Insuffisant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {AGE_GROUPS.map((ageGroup) => (
+                      <tr key={ageGroup}>
+                        <td className="border px-3 py-2">{ageGroup}</td>
+                        <td className="border px-3 py-2 text-center">
+                          {matrix.excellent[ageGroup]}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {matrix.bien[ageGroup]}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {matrix.moyen[ageGroup]}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {matrix.insuffisant[ageGroup]}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {AGE_GROUPS.map((ag) => (
-                        <tr key={ag}>
-                          <td className="border px-3 py-2">{ag}</td>
-                          <td className="border px-3 py-2 text-center">
-                            {matrix.excellent[ag]}
-                          </td>
-                          <td className="border px-3 py-2 text-center">
-                            {matrix.bien[ag]}
-                          </td>
-                          <td className="border px-3 py-2 text-center">
-                            {matrix.moyen[ag]}
-                          </td>
-                          <td className="border px-3 py-2 text-center">
-                            {matrix.insuffisant[ag]}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            {/* Derniers votes */}
             <div className="space-y-2">
               <h3 className="font-medium">Derniers votes</h3>
               {stored.length === 0 ? (
                 <p className="text-sm opacity-70">Aucun vote enregistré.</p>
               ) : (
                 <ul className="text-sm space-y-1">
-                  {stored.slice(0, 20).map((f, i) => (
-                    <li key={i} className="border rounded px-3 py-2">
-                      {new Date(f.createdAt).toLocaleString()} — {f.age} —{" "}
-                      {mapRatingToVoteType(f.rating)}
+                  {stored.slice(0, 20).map((feedback, index) => (
+                    <li key={index} className="border rounded px-3 py-2">
+                      {new Date(feedback.createdAt).toLocaleString()} — {feedback.age} —{" "}
+                      {mapRatingToVoteType(feedback.rating)}
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            {/* Actions admin */}
             <div className="flex flex-wrap gap-3">
               <Button
                 onClick={resetVotes}

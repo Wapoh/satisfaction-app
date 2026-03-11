@@ -25,14 +25,15 @@ export default function AgeTiles({
 }) {
   return (
     <div aria-labelledby="age-title">
-      <div id="age-title" className="mb-2 font-medium">
+      <div id="age-title" className="mb-3 text-lg md:text-xl font-semibold">
         {title} {required && <span className="text-red-500">*</span>}
       </div>
 
+      {/* iPad: 3 colonnes, gros espacements */}
       <div
         role="group"
         aria-label="Choix de la tranche d’âge"
-        className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+        className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4"
       >
         {OPTIONS.map((opt) => {
           const selected = value === opt.value;
@@ -43,7 +44,9 @@ export default function AgeTiles({
               onClick={() => onChange?.(opt.value)}
               aria-pressed={selected}
               className={[
-                "h-14 rounded-2xl border text-base sm:text-lg px-4 flex items-center justify-center",
+                "h-16 md:h-20 rounded-2xl border px-4 md:px-6",
+                "flex items-center justify-center",
+                "text-base md:text-xl font-medium",
                 "transition focus:outline-none focus:ring-2 focus:ring-offset-2",
                 selected
                   ? "bg-black text-white border-black"
@@ -56,9 +59,8 @@ export default function AgeTiles({
         })}
       </div>
 
-      {/* aide visuelle si rien n'est choisi et que c'est requis */}
       {required && !value && (
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-3 text-sm md:text-base text-gray-500">
           Touchez une vignette pour sélectionner votre tranche d’âge.
         </p>
       )}
